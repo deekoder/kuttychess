@@ -298,7 +298,7 @@ def train_simple_mistake_detector(games_df):
 # ========== MAIN APP CODE ==========
 
 # App title
-st.title("Chess Buddy - Learn Chess for Kids!")
+st.title("Kutty Chess - Learn Chess for Kids!")
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Chess_Pieces_Sprite.svg/800px-Chess_Pieces_Sprite.svg.png", width=200)
 
 # Initialize session state variables
