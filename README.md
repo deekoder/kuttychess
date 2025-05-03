@@ -2,8 +2,8 @@ This MVP chess learning app for kids includes:
 ## Interactive learning sections:
 1. "Meet the Chess Pieces" - introduces each piece with fun facts
 2. "Learn How Pieces Move" - visualizes legal moves for each piece
-3. "Try a Puzzle" - simple checkmate puzzles with explanations
-4. "Play Against Computer" - adjustable difficulty level for playing games
+3. "Checkmate" - simple checkmate puzzles with explanations
+4. "Play your first game" - adjustable difficulty level for playing games
 
 ## Kid-friendly features:
 - Simple explanations with fun facts
