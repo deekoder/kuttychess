@@ -21,6 +21,7 @@ This MVP chess learning app for kids includes:
 - Install requirements: `pip install streamlit python-chess`
 - Install Stockfish chess engine `pip install stockfish`
 - Run with `streamlit run combined-chess=app.py`
+- Must have stockfish installed in a path when running locally
 
 ## Roadmap to fine-tune this for kids:
 - Add more colorful graphics and animations

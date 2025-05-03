@@ -1,5 +1,5 @@
-# Chess Learning App with Kaggle Integration
-# Requirements: pip install streamlit python-chess stockfish pandas scikit-learn
+# Chess Learning App with Kaggle Integration and AI Stories
+# Requirements: pip install streamlit python-chess stockfish pandas scikit-learn langchain openai python-dotenv
 
 import streamlit as st
 import chess
@@ -14,6 +14,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import re
+
+# Import the story generator integration
+# This assumes chess_app_integration.py is in the same directory
+from chess_app_integration import add_story_button_to_chess_app
 
 # Initialize Stockfish (you'll need to install this separately)
 # Adjust the path to where you have Stockfish installed
@@ -380,6 +384,9 @@ if app_mode == "Meet the Chess Pieces":
         st.markdown(piece['moves'])
         st.markdown("### Fun Fact:")
         st.markdown(piece['fun_fact'])
+    
+    # NEW FEATURE: Add the AI story generator button
+    add_story_button_to_chess_app(selected_piece)
 
 # SECTION 2: LEARN HOW PIECES MOVE
 elif app_mode == "Learn How Pieces Move":
@@ -585,26 +592,78 @@ elif app_mode == "Play Against Computer":
                     try:
                         from_sq = chess.parse_square(from_square.lower())
                         to_sq = chess.parse_square(to_square.lower())
-                        # ... (your chess move logic here, using from_sq and to_sq) ...
-                    except ValueError as ve: #Catching the specific value error that chess.parse_square can raise
-                        st.error(f"Invalid square input: {ve}") #st.error is better than return in streamlit.
-                    except Exception as e:
-                        st.error(f"An unexpected error occurred: {e}") #st.error is better than return in streamlit.
-                    else:
-                        # Code to execute if no exceptions occurred.
-                        st.success("Move made successfully!")
-                        # ... (update game state, display updated board, etc.) ...
-                else:
-                    st.warning("Please select both 'From' and 'To' squares.") #st.warning is better than return in streamlit.
-
-            
-          #  if st.button("Make Move"):
-          #      if from_square and to_square:
-          #         try:
-          #              from_sq = chess.parse_square(from_square.lower())
-           #             to_sq = chess.parse_square(to_square.lower())
-            #        except Exception as e:
-             #           return f"An error occurred: {e}"
                         
                         # Create the move
-                
+                        move = chess.Move(from_sq, to_sq)
+                        
+                        # Check if the move is legal
+                        if move in st.session_state.board.legal_moves:
+                            # Make the player's move
+                            st.session_state.board.push(move)
+                            st.session_state.last_move = (from_sq, to_sq)
+                            
+                            # Let Stockfish make a move
+                            if not st.session_state.board.is_game_over():
+                                stockfish.set_fen_position(st.session_state.board.fen())
+                                best_move = stockfish.get_best_move()
+                                
+                                if best_move:
+                                    stockfish_from = chess.parse_square(best_move[:2])
+                                    stockfish_to = chess.parse_square(best_move[2:4])
+                                    stockfish_move = chess.Move(stockfish_from, stockfish_to)
+                                    
+                                    # Make the computer's move
+                                    st.session_state.board.push(stockfish_move)
+                                    st.session_state.last_move = (stockfish_from, stockfish_to)
+                                    
+                                    # Rerun to update the display
+                                    st.experimental_rerun()
+                            else:
+                                st.experimental_rerun()
+                        else:
+                            st.error("That's not a legal move. Try again!")
+                    except ValueError as ve:
+                        st.error(f"Invalid square input: {ve}")
+                    except Exception as e:
+                        st.error(f"An unexpected error occurred: {e}")
+                else:
+                    st.warning("Please select both 'From' and 'To' squares.")
+
+# Add a section for Chess Analytics if data is loaded
+elif app_mode == "Chess Analytics" and st.session_state.data_loaded:
+    st.header("Chess Analytics")
+    
+    # Display some analytics about the loaded chess data
+    st.subheader("Opening Statistics")
+    
+    # Example analytics: Most common openings
+    if st.session_state.games_df is not None:
+        opening_counts = st.session_state.games_df['opening_name'].value_counts()
+        st.write("Most popular openings in the dataset:")
+        st.bar_chart(opening_counts)
+        
+        # Win rates by opening
+        st.subheader("Win Rates by Opening")
+        
+        # Process win rates
+        win_rates = {}
+        for opening in st.session_state.games_df['opening_name'].unique():
+            opening_games = st.session_state.games_df[st.session_state.games_df['opening_name'] == opening]
+            white_wins = len(opening_games[opening_games['result'] == '1-0'])
+            black_wins = len(opening_games[opening_games['result'] == '0-1'])
+            draws = len(opening_games[opening_games['result'] == '1/2-1/2'])
+            total_games = len(opening_games)
+            
+            if total_games > 0:
+                win_rates[opening] = {
+                    'White Win %': (white_wins / total_games) * 100,
+                    'Black Win %': (black_wins / total_games) * 100,
+                    'Draw %': (draws / total_games) * 100
+                }
+        
+        # Convert to DataFrame for easy display
+        win_rates_df = pd.DataFrame(win_rates).T
+        st.write(win_rates_df)
+        
+        # Display a tip based on the data
+        st.info("💡 Tip: The openings with the highest win rates for White in this dataset are good ones to study if you like playing White!")
